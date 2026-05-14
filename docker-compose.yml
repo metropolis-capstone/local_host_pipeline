@@ -66,3 +66,15 @@ services:
       - ./vmagent/aggregations.yml:/etc/vmagent/aggregations.yml:ro
     depends_on:
       - vminsert
+      - vector
+
+  vector:
+    build: ./vector
+    container_name: vector
+    networks: [vm-net]
+    ports:
+      - "9090:9090"
+    environment:
+      - AWS_ACCESS_KEY_ID=placeholder
+      - AWS_SECRET_ACCESS_KEY=placeholder
+      - AWS_REGION=placeholder

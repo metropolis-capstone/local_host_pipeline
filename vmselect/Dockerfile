@@ -1,4 +1,4 @@
-FROM victoriametrics/vmstorage:latest
+FROM victoriametrics/vmselect:latest
 
 VOLUME [ "/cache" ]
 

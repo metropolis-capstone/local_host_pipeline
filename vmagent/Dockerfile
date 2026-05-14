@@ -12,6 +12,6 @@ ENTRYPOINT [ "/vmagent-prod" ]
 CMD [ \
   "--remoteWrite.url=http://vminsert:8480/insert/0/prometheus/api/v1/write", \
   "--remoteWrite.tmpDataPath=/vmagentdata", \
-  "--remoteWrite.streamAggr.config=/etc/vmagent/aggregations.yml" \
+  "--remoteWrite.streamAggr.config=/etc/vmagent/aggregations.yml", \
   "--remoteWrite.url=http://vector:9090/" \
 ]
