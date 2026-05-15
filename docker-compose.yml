@@ -1,5 +1,3 @@
-version: "3.8"
-
 # creates a private internal network called vm-net through which containers can communicate
 networks:
   vm-net:
@@ -23,7 +21,7 @@ services:
     volumes:
       - vmstorage-data:/storage
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8482/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8482/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -66,15 +64,15 @@ services:
       - ./vmagent/aggregations.yml:/etc/vmagent/aggregations.yml:ro
     depends_on:
       - vminsert
-      - vector
+      #- vector
 
-  vector:
-    build: ./vector
-    container_name: vector
-    networks: [vm-net]
-    ports:
-      - "9090:9090"
-    environment:
-      - AWS_ACCESS_KEY_ID=placeholder
-      - AWS_SECRET_ACCESS_KEY=placeholder
-      - AWS_REGION=placeholder
+  # vector:
+  #   build: ./vector
+  #   container_name: vector
+  #   networks: [vm-net]
+  #   ports:
+  #     - "9090:9090"
+  #   environment:
+  #     - AWS_ACCESS_KEY_ID=placeholder
+  #     - AWS_SECRET_ACCESS_KEY=placeholder
+  #     - AWS_REGION=placeholder
