@@ -2,6 +2,9 @@ import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+//tenant id here is 0 since that seems to always work
+//read about tenant id
 const vmSelectEndpoint = process.env.VMSELECT_ENDPOINT || "http://localhost:8481/select/0/prometheus/api/v1"
 
 //this is in case victoria metrics was taken offline and brought online again
@@ -25,7 +28,7 @@ const getAllHistoricalMetricNames = async () => {
   return res.data.data;
 }
 
-interface ActiveMetrics {
+interface MetricsAPIResponse {
   status: string;
   isPartial: boolean;
   data: MetricsData;
@@ -55,8 +58,22 @@ interface LabelValuePairCount extends LabelCount {}
 
 // we are interested in seriesCountByMetricName and labelValueCountByLabelName
 // use like this:
-// const { seriesCountByMetricName, labelValueCountByLabelName } = await getCurrentActiveMetrics();
-const getCurrentActiveMetrics = async () => {
-  const res = await axios.get<ActiveMetrics>(`${vmSelectEndpoint}//status/tsdb?topN=100`);
+// const { seriesCountByMetricName } = await getCurrentActiveMetrics();
+// also gives label value counts but we have no idea which metrics they're associated with
+const getMetricsData = async (date?: Date) => {
+  // this gives utc date; can be off by 1 for certain timezones at certain times
+  // for example when i tested it I had to use today's date to get yesterday's results.
+  const targetDay = date && date.toISOString().slice(0, 10);
+  const endpoint = targetDay ? `${vmSelectEndpoint}//status/tsdb?topN=100&date=${targetDay}`
+    : `${vmSelectEndpoint}//status/tsdb?topN=100`;
+  const res = await axios.get<MetricsAPIResponse>(endpoint);
+  return res.data.data;
+}
+
+// this is how we understand which labels are associated with which metrics
+// note, there can and often is overlap
+// use just like the above function
+const getLabelValueCountsForMetric = async (metricName: string) => {
+  const res = await axios.get<MetricsAPIResponse>(`${vmSelectEndpoint}//status/tsdb?match[]=${metricName}&topN=100`);
   return res.data.data;
 }
