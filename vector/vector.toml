@@ -1,0 +1,23 @@
+[sources.prom_in]
+type = "prometheus_remote_write"
+address = "0.0.0.0:9090"
+
+[transforms.to_victoriametrics_format]
+type = "remap"
+inputs = ["prom_in"]
+  source = '''
+. = {
+  "metric": merge({"__name__": .name}, .tags),
+  "values": [.value],
+  "timestamps": [to_unix_timestamp!(.timestamp, unit: "milliseconds")]
+}
+'''
+
+[sinks.s3_out]
+type = "aws_s3"
+inputs = ["to_victoriametrics_format"]
+bucket = "placeholder name"
+region = "placeholder region"
+key_prefix = "unbounded_metrics/"
+encoding.codec = "json"
+framing.method = "newline_delimited"
