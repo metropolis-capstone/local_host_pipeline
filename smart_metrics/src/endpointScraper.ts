@@ -105,6 +105,33 @@ interface labelsForMetricsAPIResponse extends BaseAPIResponse{
 // is an example of getting up to 500 label values for a label belonging to a metric
 // the data field will be a massive array.
 const getEachLabelValueForMetric = async (metricName: string, labelName: string, limit: number) => {
-  const res = await axios.get<labelsForMetricsAPIResponse>(`${vmSelectEndpoint}/label/${labelName}/values?match[]=${metricName}&limit=${limit}`)
-  return res.data.data
+  const res = await axios.get<labelsForMetricsAPIResponse>(`${vmSelectEndpoint}/label/${labelName}/values?match[]=${metricName}&limit=${limit}`);
+  return res.data.data;
 }
+
+// the above may not be enough on its own. we might need a more sophisticated approach for those labels with 100,000s values (if we decided that is our upper limit)
+
+// Shannon entropy; we do this do determine if values are not evenly distributed; for example if 90% of user_id values are "1"
+// then user_id may be an aggregation target
+const shannonEntropy = (labels: string[]) => {
+  const total = labels.length;
+  if (total <= 1) { return 0 }
+
+  const counts = new Map<string, number>();
+  for (let label of labels) {
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  // formula implementation
+  let entropy = 0;
+  for (let count of counts.values()) {
+    const p = count / total;
+    entropy -= p * Math.log2(p);
+  }
+
+  return entropy;
+}
+
+// usage:
+// const labelValues = await getEachLabelValueForMetric(request.http.total, user_id, 100000)
+// const entropyScore = shannonEntropy(labelValues)
