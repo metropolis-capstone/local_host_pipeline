@@ -65,9 +65,33 @@ async function collectQueries() {
     });
 
     const queries = response.data.result.queryHistory
+    return queries
   } catch (err) {
     if (err instanceof Error) console.error('Error', err.message)
   }
 }
 
+async function collectDashboardQueries() {
+  try {
+    const response = await axios.get(`${GRAFANA_URL}/api/search`, {
+      auth: {
+        username: GRAFANA_USER,
+        password: GRAFANA_PASSWORD,
+      },
+    });
 
+    const dashboardObjs = response.data
+    
+    const dashboardQueries = dashboardObjs.map(async (dashboardObj: any) => {
+        const response = await axios.get(`${GRAFANA_URL}/api/dashboards/uid/${dashboardObj.uid}`)
+        const dashboard = response.data.dashboard
+        const panels = dashboard.panels
+        const targets = panels[0].targets
+        const expr = targets[0].expr
+        
+      }
+    )
+  } catch (err) {
+    if (err instanceof Error) console.error('Error', err.message)
+  }
+}
