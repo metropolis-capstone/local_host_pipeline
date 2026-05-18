@@ -54,25 +54,7 @@ export interface DatasourceRef {
   uid: string;
 }
 
-export async function collectQueries() {
-  try {
-    //returns expression at index 0, property expr.
-    const response = await axios.get(`${GRAFANA_URL}/api/query-history`, {
-      auth: {
-        username: GRAFANA_USER,
-        password: GRAFANA_PASSWORD,
-      },
-    });
-
-    const queries = response.data.result.queryHistory;
-    return queries;
-  } catch (err) {
-    if (err instanceof Error) console.error('Error', err.message);
-  }
-}
-
-
-// types for the next function 
+// types for the next function
 type DashboardSearchResults = DashboardSearchResult[];
 
 interface DashboardSearchResult {
@@ -106,6 +88,24 @@ interface Panel {
 interface Target {
   expr: string;
 }
+
+export async function collectQueries() {
+  try {
+    //returns expression at index 0, property expr.
+    const response = await axios.get(`${GRAFANA_URL}/api/query-history`, {
+      auth: {
+        username: GRAFANA_USER,
+        password: GRAFANA_PASSWORD,
+      },
+    });
+
+    const queries = response.data.result.queryHistory;
+    return queries;
+  } catch (err) {
+    if (err instanceof Error) console.error('Error', err.message);
+  }
+}
+
 
 export async function collectDashboardQueries() {
   try {

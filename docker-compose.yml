@@ -74,7 +74,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
+    # persists internal data, grafana state persistence effectively
       - grafana-data:/var/lib/grafana
+      # load instruction for the local repo
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       - GF_SECURITY_ADMIN_USER=admin
