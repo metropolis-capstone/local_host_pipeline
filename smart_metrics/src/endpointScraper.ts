@@ -46,17 +46,19 @@ const getMetricsData = async (date?: Date) => {
   // this gives utc date; can be off by 1 for certain timezones at certain times
   // for example when i tested it I had to use today's date to get yesterday's results.
   const targetDay = date && date.toISOString().slice(0, 10);
-  const endpoint = targetDay ? `${vmSelectEndpoint}//status/tsdb?topN=100&date=${targetDay}`
+  const endpoint = targetDay ? `${vmSelectEndpoint}/status/tsdb?topN=100&date=${targetDay}`
     : `${vmSelectEndpoint}//status/tsdb?topN=100`;
   const res = await axios.get<MetricsAPIResponse>(endpoint);
   return res.data.data;
 }
 
+//getMetricsData(new Date(2026, 4, 18)).then(console.log)
+
 // this is how we understand which labels are associated with which metrics
 // note, there can and often is overlap
 // use just like the above function
-const getLabelValueCountsForMetric = async (metricName: string) => {
-  const res = await axios.get<MetricsAPIResponse>(`${vmSelectEndpoint}//status/tsdb?match[]=${metricName}&topN=100`);
+const getLabelValueCountsForMetric = async (metricName: string, date: Date) => {
+  const res = await axios.get<MetricsAPIResponse>(`${vmSelectEndpoint}/status/tsdb?match[]=${metricName}&topN=100&date=${date.toISOString()}`);
   return res.data.data;
 }
 
@@ -75,6 +77,8 @@ const getLabelValueCountsForMetric = async (metricName: string) => {
 // // there is often overlap (almost all of mine had overlapped)
 // console.log(labelsOfEachMetric)
 
+//===========================================================================================================================
+//OPTIONAL
 
 interface labelsForMetricsAPIResponse extends BaseAPIResponse{
   data: string[];
@@ -89,7 +93,6 @@ const getEachLabelValueForMetric = async (metricName: string, labelName: string,
 }
 
 // the above may not be enough on its own. we might need a more sophisticated approach for those labels with 100,000s values (if we decided that is our upper limit)
-
 // Shannon entropy; we do this do determine if values are not evenly distributed; for example if 90% of user_id values are "1"
 // then user_id may be an aggregation target
 const shannonEntropy = (labels: string[]) => {
