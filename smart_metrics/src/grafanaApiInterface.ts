@@ -54,7 +54,7 @@ export interface DatasourceRef {
   uid: string;
 }
 
-async function collectQueries() {
+export async function collectQueries() {
   try {
     //returns expression at index 0, property expr.
     const response = await axios.get(`${GRAFANA_URL}/api/query-history`, {
@@ -64,27 +64,63 @@ async function collectQueries() {
       },
     });
 
-    const queries = response.data.result.queryHistory
-    return queries
+    const queries = response.data.result.queryHistory;
+    return queries;
   } catch (err) {
-    if (err instanceof Error) console.error('Error', err.message)
+    if (err instanceof Error) console.error('Error', err.message);
   }
 }
 
-async function collectDashboardQueries() {
+
+// types for the next function 
+type DashboardSearchResults = DashboardSearchResult[];
+
+interface DashboardSearchResult {
+  id: number;
+  uid: string;
+  orgId: number;
+  title: string;
+  uri: string;
+  url: string;
+  slug: string;
+  type: string;
+  tags: string[];
+  isStarred: boolean;
+  sortMeta: number;
+  isDeleted: boolean;
+}
+
+//reductive, there are loads of additional properties, but this is the chain we're concerned with.
+interface DashboardPayload {
+  dashboard: Dashboard;
+}
+
+interface Dashboard {
+  panels: Panel[];
+}
+
+interface Panel {
+  targets: Target[];
+}
+
+interface Target {
+  expr: string;
+}
+
+export async function collectDashboardQueries() {
   try {
-    const response = await axios.get(`${GRAFANA_URL}/api/search`, {
+    const response = await axios.get<DashboardSearchResults>(`${GRAFANA_URL}/api/search`, {
       auth: {
         username: GRAFANA_USER,
         password: GRAFANA_PASSWORD,
       },
     });
 
-    const dashboardObjs = response.data
+    const dashboardObjs = response.data;
     
     const dashboardQueries = await Promise.all(
       dashboardObjs.map(async (dashboardObj: any) => {
-        const response = await axios.get(
+        const response = await axios.get<DashboardPayload>(
           `${GRAFANA_URL}/api/dashboards/uid/${dashboardObj.uid}`,
           {
             auth: {
@@ -105,8 +141,6 @@ async function collectDashboardQueries() {
     
     return dashboardQueries;
   } catch (err) {
-    if (err instanceof Error) console.error('Error', err.message)
+    if (err instanceof Error) console.error('Error', err.message);
   }
 }
-
-collectDashboardQueries().then(console.log)
