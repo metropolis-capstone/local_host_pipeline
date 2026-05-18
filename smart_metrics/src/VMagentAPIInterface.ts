@@ -7,16 +7,16 @@ dotenv.config();
 //read about tenant id
 const vmSelectEndpoint = process.env.VMSELECT_ENDPOINT || "http://localhost:8481/select/0/prometheus/api/v1"
 
-interface BaseAPIResponse {
+export interface BaseAPIResponse {
   status: string;
   isPartial: boolean;
 }
 
-interface MetricsAPIResponse extends BaseAPIResponse{
+export interface MetricsAPIResponse extends BaseAPIResponse{
   data: MetricsData;
 }
 
-interface MetricsData {
+export interface MetricsData {
   totalSeries: number;
   totalLabelValuePairs: number;
   seriesCountByMetricName: MetricStats[];
@@ -26,12 +26,12 @@ interface MetricsData {
   labelValueCountByLabelName: TSDBDataItem[];
 }
 
-interface TSDBDataItem {
+export interface TSDBDataItem {
   name: string;
   value: number;
 }
 
-interface MetricStats extends TSDBDataItem {
+export interface MetricStats extends TSDBDataItem {
   requestsCount: number;
   lastRequestTimestamp: number;
 }
@@ -42,7 +42,7 @@ interface MetricStats extends TSDBDataItem {
 // use like this:
 // const { seriesCountByMetricName } = await getCurrentActiveMetrics();
 // also gives label value counts but we have no idea which metrics they're associated with
-const getMetricsData = async (date?: Date) => {
+export const getMetricsData = async (date?: Date) => {
   // this gives utc date; can be off by 1 for certain timezones at certain times
   // for example when i tested it I had to use today's date to get yesterday's results.
   const targetDay = date && date.toISOString().slice(0, 10);
@@ -57,7 +57,7 @@ const getMetricsData = async (date?: Date) => {
 // this is how we understand which labels are associated with which metrics
 // note, there can and often is overlap
 // use just like the above function
-const getLabelValueCountsForMetric = async (metricName: string, date: Date) => {
+export const getLabelValueCountsForMetric = async (metricName: string, date: Date) => {
   const res = await axios.get<MetricsAPIResponse>(`${vmSelectEndpoint}/status/tsdb?match[]=${metricName}&topN=100&date=${date.toISOString()}`);
   return res.data.data;
 }
