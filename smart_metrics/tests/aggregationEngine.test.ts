@@ -1,5 +1,5 @@
 import { vi, test, expect, beforeEach } from 'vitest'
-import { databaseParser, queryParser } from '../src/aggregationEngine.js'
+import { databaseParser, queryParser, determineUnqueriedMetricLabels } from '../src/aggregationEngine.js'
 import getMetricsDataTestData from './getMetricsDataTestData.json' with { type: 'json' }
 import getLabelValueCountsForMetricTestData from './getLabelValueCountsForMetricTestData.json' with { type: 'json' }
 import collectQueriesTestData from './collectQueriesTestData.json' with { type: 'json' }
@@ -76,4 +76,38 @@ test('getLabelValueCountsForMetric is called with the correct metric name and da
   for (const metricName of expectedMetricNames) {
     expect(mockGetLabelValueCountsForMetric).toHaveBeenCalledWith(metricName, testDate)
   }
+})
+
+// determineUnqueriedMetricLabels tests
+
+test('queried labels are excluded from the output', () => {
+  const grafanaQueriesObj = { 'http.requests.total': ['method'] }
+  const vmObject = { 'http.requests.total': getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName }
+  const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
+  const expected = getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName.filter(l => l.name !== 'method')
+  expect(result['http.requests.total']).toEqual(expected)
+})
+
+test('a metric absent from grafanaQueriesObj retains all its labels', () => {
+  const grafanaQueriesObj = {}
+  const vmObject = { 'http.requests.total': getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName }
+  const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
+  expect(result['http.requests.total']).toEqual(getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName)
+})
+
+test('a metric whose every label was queried maps to an empty array', () => {
+  const grafanaQueriesObj = { 'some.metric': ['label_a', 'label_b'] }
+  const vmObject = { 'some.metric': [{ name: 'label_a', value: 10 }, { name: 'label_b', value: 5 }] }
+  const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
+  expect(result['some.metric']).toEqual([])
+})
+
+test('output has a key for every metric in vmObject', () => {
+  const grafanaQueriesObj = { 'http.requests.total': ['method'] }
+  const vmObject = {
+    'http.requests.total': getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName,
+    'http.active_connections': [{ name: 'scope.name', value: 1 }, { name: '__name__', value: 1 }],
+  }
+  const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
+  expect(Object.keys(result).sort()).toEqual(['http.active_connections', 'http.requests.total'])
 })
