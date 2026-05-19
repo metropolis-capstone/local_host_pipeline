@@ -1,5 +1,5 @@
 import { vi, test, expect, beforeEach } from 'vitest'
-import { databaseParser } from '../src/aggregationEngine.js'
+import { databaseParser, queryParser } from '../src/aggregationEngine.js'
 import getMetricsDataTestData from './getMetricsDataTestData.json' with { type: 'json' }
 import getLabelValueCountsForMetricTestData from './getLabelValueCountsForMetricTestData.json' with { type: 'json' }
 import collectQueriesTestData from './collectQueriesTestData.json' with { type: 'json' }
@@ -31,6 +31,30 @@ beforeEach(() => {
   mockGetLabelValueCountsForMetric.mockResolvedValue(getLabelValueCountsForMetricTestData.data)
   mockCollectQueries.mockResolvedValue(collectQueriesTestData.result.queryHistory)
 })
+
+// queryParser tests
+
+test('queryParser returns an object with exactly the queried metric names as keys', async () => {
+  const result = await queryParser()
+  expect(Object.keys(result).sort()).toEqual(['http.active_connections', 'http.requests.total'])
+})
+
+test('queryParser maps http.requests.total to all labels it has been queried with', async () => {
+  const result = await queryParser()
+  expect(result['http.requests.total']).toEqual(['method'])
+})
+
+test('queryParser maps http.active_connections to all labels it has been queried with', async () => {
+  const result = await queryParser()
+  expect(result['http.active_connections']).toEqual(['scope.name'])
+})
+
+test('queryParser calls collectQueries exactly once', async () => {
+  await queryParser()
+  expect(mockCollectQueries).toHaveBeenCalledTimes(1)
+})
+
+// databaseParser tests
 
 test('returns an object keyed by all metric names from getMetricsData', async () => {
   const result = await databaseParser(testDate)

@@ -21,6 +21,7 @@ export async function queryParser() {
   return grafanaQueriesObject;
 }
 
+
     // - get list of metrics and time series count
     // - for each metric, get label value counts
     //   - create object where each key is metric name
@@ -74,7 +75,7 @@ export function determineUnqueriedMetricLabels(grafanaQueriesObj: Record<string,
   return output;
 }
 
-const grafanaObj = await queryParser();
-const vmObj = await databaseParser(new Date);
-const unusued_labels = determineUnqueriedMetricLabels(grafanaObj, vmObj);
-console.log(unusued_labels)
+// const grafanaObj = await queryParser();
+// const vmObj = await databaseParser(new Date);
+// const unusued_labels = determineUnqueriedMetricLabels(grafanaObj, vmObj);
+// console.log(unusued_labels)
