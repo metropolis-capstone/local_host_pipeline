@@ -41,14 +41,17 @@ async function databaseParser(date: Date) {
 
   const metricsData = await getMetricsData(date);
   const vmObject: Record<string, Record<string, number>> = {};
-  const { seriesCountByMetricName} = metricsData;
+  const { seriesCountByMetricName } = metricsData;
 
   const labels = await Promise.all(
     seriesCountByMetricName.map(async metric => {
-      const labelCount = await getLabelValueCountsForMetric(metric.name, date);
-
-      vmObject[metric.name] = labelCount;
-  }))
+      const { labelValueCountByLabelName } = await getLabelValueCountsForMetric(metric.name, date);
+      
+      // resolve this type later
+      vmObject[metric.name] = labelValueCountByLabelName as any;
+    })
+  )
+  
 }
 
 databaseParser(new Date)
