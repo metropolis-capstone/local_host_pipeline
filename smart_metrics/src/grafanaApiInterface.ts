@@ -92,7 +92,7 @@ interface Target {
 export async function collectQueries() {
   try {
     //returns expression at index 0, property expr.
-    const response = await axios.get(`${GRAFANA_URL}/api/query-history`, {
+    const response = await axios.get<QueryHistoryResponse>(`${GRAFANA_URL}/api/query-history`, {
       auth: {
         username: GRAFANA_USER,
         password: GRAFANA_PASSWORD,
@@ -144,3 +144,4 @@ export async function collectDashboardQueries() {
     if (err instanceof Error) console.error('Error', err.message);
   }
 }
+
