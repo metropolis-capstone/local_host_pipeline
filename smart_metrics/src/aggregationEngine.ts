@@ -34,9 +34,26 @@ export async function grafanaDashboardQueriesParser() {
   return grafanaQueriesObj;
 }
 
-export function combineManualandDashboardQueries(grafanaQueriesObj: Record<string, string[]>, grafanaDashboardQueriesObj: Record<string, string[]>) {
-  return null
-}
+grafanaQueriesParser().then(console.log)
+grafanaDashboardQueriesParser().then(console.log)
+
+ export function combineManualandDashboardQueries(
+    grafanaQueriesObj: Record<string, Set<string>>,
+    grafanaDashboardQueriesObj: Record<string, Set<string>>
+  ): Record<string, Set<string>> {
+    const combined: Record<string, Set<string>> = {};
+
+    for (const [metric, labels] of Object.entries(grafanaQueriesObj)) {
+      combined[metric] = new Set(labels);
+    }
+
+    for (const [metric, labels] of Object.entries(grafanaDashboardQueriesObj)) {
+      combined[metric] ??= new Set();
+      labels.forEach(label => combined[metric].add(label));
+    }
+
+    return combined;
+  }
 
 interface LabelValueCount {
   name: string;
@@ -85,9 +102,10 @@ export function determineUnqueriedMetricLabels(grafanaQueriesObj: Record<string,
   return output;
 }
 
-// const grafanaqueriesObj = await grafanaQueriesParser();
+// example use
+// const grafanaQueriesObj = await grafanaQueriesParser();
 // const grafanaDashboardQueriesObj = await grafanaDashboardQueriesParser();
-// const allGrafanaQueriesObj = combineManualandDashboardQueries();
+// const allGrafanaQueriesObj = combineManualandDashboardQueries(grafanaQueriesObj, grafanaDashboardQueriesObj);
 // const vmObj = await vmParser(new Date);
 // const unusued_labels = determineUnqueriedMetricLabels(allGrafanaQueriesObj, vmObj);
 // console.log(unusued_labels)

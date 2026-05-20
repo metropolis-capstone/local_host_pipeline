@@ -8,6 +8,8 @@ load inputs
       -parse metric name and labels from returned expression
       - create object where each key is a metric name
         and each value is array of labels that were queried
+    -combine the two results to create an object that represents
+    all labels queried for a metric.
         
   - victoria metrics time series data
     - get list of metrics and time series count
