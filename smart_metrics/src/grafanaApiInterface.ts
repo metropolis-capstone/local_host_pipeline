@@ -89,9 +89,9 @@ interface Target {
   expr: string;
 }
 
+//returns all queries executed in the last two weeks.
 export async function collectQueries() {
   try {
-    //returns expression at index 0, property expr.
     const response = await axios.get<QueryHistoryResponse>(`${GRAFANA_URL}/api/query-history`, {
       auth: {
         username: GRAFANA_USER,
@@ -102,7 +102,7 @@ export async function collectQueries() {
     const queries = response.data.result.queryHistory;
     return queries;
   } catch (err) {
-    if (err instanceof Error) console.error('Error', err.message);
+    throw err;
   }
 }
 
@@ -142,6 +142,6 @@ export async function collectDashboardQueries() {
 
     return dashboardQueries;
   } catch (err) {
-    if (err instanceof Error) console.error('Error', err.message);
+    throw err;
   }
 }
