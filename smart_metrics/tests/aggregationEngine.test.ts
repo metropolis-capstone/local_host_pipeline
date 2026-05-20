@@ -43,12 +43,12 @@ test('grafanaQueriesParser returns an object with exactly the queried metric nam
 
 test('grafanaQueriesParser maps http.requests.total to all labels it has been queried with', async () => {
   const result = await grafanaQueriesParser()
-  expect(result['http.requests.total']).toEqual(['method'])
+  expect(result['http.requests.total']).toEqual(new Set(['method']))
 })
 
 test('grafanaQueriesParser maps http.active_connections to all labels it has been queried with', async () => {
   const result = await grafanaQueriesParser()
-  expect(result['http.active_connections']).toEqual(['scope.name'])
+  expect(result['http.active_connections']).toEqual(new Set(['scope.name']))
 })
 
 test('grafanaQueriesParser calls collectQueries exactly once', async () => {
@@ -65,7 +65,7 @@ test('grafanaDashboardQueriesParser returns an object with exactly the queried m
 
 test('grafanaDashboardQueriesParser maps http.requests.total to all labels it has been queried with', async () => {
   const result = await grafanaDashboardQueriesParser()
-  expect(result['http.requests.total']).toEqual(['method'])
+  expect(result['http.requests.total']).toEqual(new Set(['method']))
 })
 
 test('grafanaDashboardQueriesParser calls collectDashboardQueries exactly once', async () => {
@@ -100,7 +100,7 @@ test('getLabelValueCountsForMetric is called with the correct metric name and da
 // determineUnqueriedMetricLabels tests
 
 test('queried labels are excluded from the output', () => {
-  const grafanaQueriesObj = { 'http.requests.total': ['method'] }
+  const grafanaQueriesObj = { 'http.requests.total': new Set(['method']) }
   const vmObject = { 'http.requests.total': getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName }
   const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
   const expected = getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName.filter(l => l.name !== 'method')
@@ -115,14 +115,14 @@ test('a metric absent from grafanaQueriesObj retains all its labels', () => {
 })
 
 test('a metric whose every label was queried maps to an empty array', () => {
-  const grafanaQueriesObj = { 'some.metric': ['label_a', 'label_b'] }
+  const grafanaQueriesObj = { 'some.metric': new Set(['label_a', 'label_b']) }
   const vmObject = { 'some.metric': [{ name: 'label_a', value: 10 }, { name: 'label_b', value: 5 }] }
   const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
   expect(result['some.metric']).toEqual([])
 })
 
 test('output has a key for every metric in vmObject', () => {
-  const grafanaQueriesObj = { 'http.requests.total': ['method'] }
+  const grafanaQueriesObj = { 'http.requests.total': new Set(['method']) }
   const vmObject = {
     'http.requests.total': getLabelValueCountsForMetricTestData.data.labelValueCountByLabelName,
     'http.active_connections': [{ name: 'scope.name', value: 1 }, { name: '__name__', value: 1 }],
