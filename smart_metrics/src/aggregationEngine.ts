@@ -84,6 +84,16 @@ export async function vmParser(date: Date) {
   return vmObject
 }
 
+export async function getTotalSeriesCount(date: Date) {
+  const metricsData = await getMetricsData(date);
+  return metricsData.totalSeries;
+}
+
+export async function getSeriesCountForMetric(metricName: string, date: Date) {
+  const metricData = await getLabelValueCountsForMetric(metricName, date);
+  return metricData.totalSeries;
+}
+
 // example use for today's (utc timezone) data:
 // vmParser(new Date).then(console.log)
 
