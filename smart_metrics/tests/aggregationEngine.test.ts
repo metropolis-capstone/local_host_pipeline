@@ -1,17 +1,20 @@
 import { vi, test, expect, beforeEach } from 'vitest'
-import { vmParser, grafanaQueriesParser, grafanaDashboardQueriesParser, determineUnqueriedMetricLabels, getTotalSeriesCount, getSeriesCountForMetric } from '../src/aggregationEngine.js'
+import { vmParser, grafanaQueriesParser, grafanaDashboardQueriesParser, determineUnqueriedMetricLabels, getTotalSeriesCount, getSeriesCountForMetric, getSeriesReduction } from '../src/aggregationEngine.js'
 import getMetricsDataTestData from './getMetricsDataTestData.json' with { type: 'json' }
 import getLabelValueCountsForMetricTestData from './getLabelValueCountsForMetricTestData.json' with { type: 'json' }
 import collectQueriesTestData from './collectQueriesTestData.json' with { type: 'json' }
 
 // Safe defaults are required here because aggregationEngine.ts has top-level awaits
 // that fire the moment the module is imported — before beforeEach can set return values.
-const { mockGetMetricsData, mockGetLabelValueCountsForMetric, mockCollectQueries, mockCollectDashboardQueries } = vi.hoisted(() => ({
+const { mockGetMetricsData, mockGetLabelValueCountsForMetric, mockCollectQueries, mockCollectDashboardQueries, mockAxiosPost } = vi.hoisted(() => ({
   mockGetMetricsData: vi.fn().mockResolvedValue({ seriesCountByMetricName: [] }),
   mockGetLabelValueCountsForMetric: vi.fn().mockResolvedValue({ labelValueCountByLabelName: [] }),
   mockCollectQueries: vi.fn().mockResolvedValue([]),
   mockCollectDashboardQueries: vi.fn().mockResolvedValue(['count(http.requests.total{method="GET"})']),
+  mockAxiosPost: vi.fn().mockResolvedValue({ data: { status: 'success', data: { result: [{ value: [0, '75.5'] }] } } }),
 }))
+
+vi.mock('axios', () => ({ default: { post: mockAxiosPost } }))
 
 vi.mock('../src/vmSelectApiInterface.js', () => ({
   getMetricsData: mockGetMetricsData,
@@ -143,4 +146,23 @@ test('getTotalSeriesCount returns the totalSeries value from getMetricsData', as
 test('getSeriesCountForMetric returns the totalSeries value from getLabelValueCountsForMetric', async () => {
   const result = await getSeriesCountForMetric('http.requests.total', testDate)
   expect(result).toBe(getLabelValueCountsForMetricTestData.data.totalSeries)
+})
+
+// getSeriesReduction tests
+
+test('getSeriesReduction returns the parsed reduction percentage on success', async () => {
+  const result = await getSeriesReduction('http.requests.total', 'request_id')
+  expect(result).toBe(75.5)
+})
+
+test('getSeriesReduction returns 0 when the result array is empty', async () => {
+  mockAxiosPost.mockResolvedValueOnce({ data: { status: 'success', data: { result: [] } } })
+  const result = await getSeriesReduction('http.requests.total', 'request_id')
+  expect(result).toBe(0)
+})
+
+test('getSeriesReduction returns 0 when axios throws', async () => {
+  mockAxiosPost.mockRejectedValueOnce(new Error('network error'))
+  const result = await getSeriesReduction('http.requests.total', 'request_id')
+  expect(result).toBe(0)
 })

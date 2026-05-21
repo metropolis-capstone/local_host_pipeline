@@ -133,26 +133,25 @@ interface VMQueryResponse {
   };
 }
 
-async function getSeriesReduction(metric: string, label: string): Promise<number> {
-  const url = 'http://localhost:8481/select/0/prometheus/api/v1/query';
+export async function getSeriesReduction(metric: string, label: string): Promise<number> {
+  const url = "http://localhost:8481/select/0/prometheus/api/v1/query";
   const query = `100 * (1 - (count(count without (${label}) (present_over_time(${metric}[1h]))) / count(present_over_time(${metric}[1h]))))`;
 
   try {
     const params = new URLSearchParams({ query });
     const response = await axios.post<VMQueryResponse>(url, params, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }
     });
 
     // type checking
     const rawValue = response.data?.data?.result?.[0]?.value?.[1];
 
-    if (response.data?.status === 'success' && rawValue) {
+    if (response.data?.status === "success" && rawValue) {
       return parseFloat(rawValue);
     }
   } catch (error) {
-    console.error('Failed to fetch metric reduction:', error);
+    console.error("Failed to fetch metric reduction:", error);
   }
-
   return 0;
 }
 
