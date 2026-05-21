@@ -3,6 +3,7 @@ import type { QueryHistoryEntry } from './grafanaApiInterface.js';
 import { getMetricsData, getLabelValueCountsForMetric } from './vmSelectApiInterface.js';
 import type { TSDBDataItem } from './vmSelectApiInterface.js';
 import { parsePromqlExpression } from './promQLQueryParser.js';
+import axios from 'axios';
 
 function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined;
@@ -114,10 +115,68 @@ export function determineUnqueriedMetricLabels(grafanaQueriesObj: Record<string,
   return output;
 }
 
-// example use
+//example use
 // const grafanaQueriesObj = await grafanaQueriesParser();
 // const grafanaDashboardQueriesObj = await grafanaDashboardQueriesParser();
 // const allGrafanaQueriesObj = combineManualandDashboardQueries(grafanaQueriesObj, grafanaDashboardQueriesObj);
+// console.log(allGrafanaQueriesObj);
 // const vmObj = await vmParser(new Date);
 // const unusued_labels = determineUnqueriedMetricLabels(allGrafanaQueriesObj, vmObj);
 // console.log(unusued_labels)
+
+interface VMQueryResponse {
+  status: 'success' | 'error';
+  data: {
+    result: Array<{
+      value: [number, string];
+    }>;
+  };
+}
+
+async function getSeriesReduction(metric: string, label: string): Promise<number> {
+  const url = 'http://localhost:8481/select/0/prometheus/api/v1/query';
+  const query = `100 * (1 - (count(count without (${label}) (present_over_time(${metric}[1h]))) / count(present_over_time(${metric}[1h]))))`;
+
+  try {
+    const params = new URLSearchParams({ query });
+    const response = await axios.post<VMQueryResponse>(url, params, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    // type checking
+    const rawValue = response.data?.data?.result?.[0]?.value?.[1];
+
+    if (response.data?.status === 'success' && rawValue) {
+      return parseFloat(rawValue);
+    }
+  } catch (error) {
+    console.error('Failed to fetch metric reduction:', error);
+  }
+
+  return 0;
+}
+
+
+//getSeriesReduction("http.requests.total", "request_id").then(console.log)
+
+interface NormalizedMetricsData {
+  grafanaUsage: {
+    usedLabels: string[];
+  };
+
+  metricLabels: {
+    [metricName: string]: {
+      name: string;
+      uniqueValueCount: number;
+    }[];
+  };
+
+  seriesEstimates: {
+    [metricName: string]: {
+      current: number;
+      afterByRemovedLabel: {
+        [labelName: string]: number;
+      };
+    };
+  };
+}

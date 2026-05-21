@@ -1,5 +1,5 @@
 import { vi, test, expect, beforeEach } from 'vitest'
-import { vmParser, grafanaQueriesParser, grafanaDashboardQueriesParser, determineUnqueriedMetricLabels } from '../src/aggregationEngine.js'
+import { vmParser, grafanaQueriesParser, grafanaDashboardQueriesParser, determineUnqueriedMetricLabels, getTotalSeriesCount, getSeriesCountForMetric } from '../src/aggregationEngine.js'
 import getMetricsDataTestData from './getMetricsDataTestData.json' with { type: 'json' }
 import getLabelValueCountsForMetricTestData from './getLabelValueCountsForMetricTestData.json' with { type: 'json' }
 import collectQueriesTestData from './collectQueriesTestData.json' with { type: 'json' }
@@ -129,4 +129,18 @@ test('output has a key for every metric in vmObject', () => {
   }
   const result = determineUnqueriedMetricLabels(grafanaQueriesObj, vmObject)
   expect(Object.keys(result).sort()).toEqual(['http.active_connections', 'http.requests.total'])
+})
+
+// getTotalSeriesCount tests
+
+test('getTotalSeriesCount returns the totalSeries value from getMetricsData', async () => {
+  const result = await getTotalSeriesCount(testDate)
+  expect(result).toBe(getMetricsDataTestData.data.totalSeries)
+})
+
+// getSeriesCountForMetric tests
+
+test('getSeriesCountForMetric returns the totalSeries value from getLabelValueCountsForMetric', async () => {
+  const result = await getSeriesCountForMetric('http.requests.total', testDate)
+  expect(result).toBe(getLabelValueCountsForMetricTestData.data.totalSeries)
 })
