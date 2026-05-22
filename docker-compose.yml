@@ -8,6 +8,7 @@ volumes:
   vmagent-data: {}
   vmselect-cache: {}
   grafana-data: {}
+  postgres-data: {}
 
 services:
   #exposting the write port only
@@ -66,6 +67,7 @@ services:
     depends_on:
       - vminsert
       #- vector
+      
   grafana:
     build: ./grafana
     container_name: grafana
@@ -94,3 +96,23 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_REGION
+      
+  postgres:
+    image: postgres:16-alpine
+    container_name: metropolis-postgres
+    restart: unless-stopped
+    networks: [vm-net]
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=metropolis
+      - POSTGRES_PASSWORD=metropolis
+      - POSTGRES_DB=metropolis
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metropolis -d metropolis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
