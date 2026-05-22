@@ -45,7 +45,26 @@ export async function detectMetricType(recommendation: Recommendation): Promise<
 }
 
 export async function buildYaml(_recommendation: Recommendation, type: MetricType): Promise<string> {
-
+    
+    const newYmlConfig: String;
+    
+    switch (type) {
+    case "counter":
+        newYmlConfig = {  
+            match: _recommendation.metricName // metric name
+            interval: 1m // aggregation timing
+            outputs: [sum_samples] // 
+            without: [request_id] // problem label being dropped
+        }
+        return output,
+    case "guage":
+        let output = {  
+            match: _recommendation.metricName // metric name
+            interval: 1m // aggregation timing
+            outputs: [sum_samples] // 
+            without: [request_id] // problem label being dropped
+        }
+    }
 
 // # - match: 'http_requests_total' // metric name
 // #   interval: 1m // aggregation timing

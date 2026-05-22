@@ -237,9 +237,9 @@ export async function normalizeMetricsData(date: Date): Promise<NormalizedMetric
   );
 
   return {
-    grafanaUsage: { usedLabels: [...usedLabels] }, // array of all queried label names
-    metricLabels,  // metric names with unique labels
-    seriesEstimates, // aggregation label removal estimates
+    grafanaUsage: { usedLabels: [...usedLabels] },
+    metricLabels,
+    seriesEstimates,
   };
 }
 
