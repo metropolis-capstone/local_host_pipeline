@@ -7,7 +7,7 @@ type = "remap"
 inputs = ["prom_in"]
   source = '''
 . = {
-  "metric": merge({"__name__": .name}, .tags),
+  "metric": merge!({"__name__": .name}, .tags),
   "values": [.value],
   "timestamps": [to_unix_timestamp!(.timestamp, unit: "milliseconds")]
 }

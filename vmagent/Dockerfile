@@ -12,6 +12,8 @@ ENTRYPOINT [ "/vmagent-prod" ]
 CMD [ \
   "--remoteWrite.url=http://vminsert:8480/insert/0/prometheus/api/v1/write", \
   "--remoteWrite.tmpDataPath=/vmagentdata", \
-  "--remoteWrite.streamAggr.config=/etc/vmagent/aggregations.yml" \
-  #"--remoteWrite.url=http://vector:9090/" \
+  "--remoteWrite.streamAggr.config=/etc/vmagent/aggregations.yml", \
+  # drop_input cannot be set in aggregations.yml; it is a CLI-only flag. Positionally maps to remoteWrite.url[0] (vminsert), so raw input is dropped there while vector (url[1]) still receives unmodified metrics
+  "--remoteWrite.streamAggr.dropInput", \
+  "--remoteWrite.url=http://vector:9090/" \
 ]
