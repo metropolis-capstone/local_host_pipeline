@@ -135,5 +135,5 @@ export function generateRecommendations(
     }
   }
 
-  return recommendations;
+  return recommendations; // array of recommendation objects
 }
