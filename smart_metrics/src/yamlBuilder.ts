@@ -45,34 +45,25 @@ export async function detectMetricType(recommendation: Recommendation): Promise<
 }
 
 export async function buildYaml(_recommendation: Recommendation, type: MetricType): Promise<string> {
-    
-    const newYmlConfig: String;
-    
+    const without = _recommendation.problemLabels.join(', ');
+
+    const rule = (outputs: string) =>
+        `- match: '${_recommendation.metricName}'\n  interval: 1m\n  outputs: [${outputs}]\n  without: [${without}]`;
+
     switch (type) {
     case "counter":
-        newYmlConfig = {  
-            match: _recommendation.metricName // metric name
-            interval: 1m // aggregation timing
-            outputs: [sum_samples] // 
-            without: [request_id] // problem label being dropped
-        }
-        return output,
-    case "guage":
-        let output = {  
-            match: _recommendation.metricName // metric name
-            interval: 1m // aggregation timing
-            outputs: [sum_samples] // 
-            without: [request_id] // problem label being dropped
-        }
+        // total accumulates the sum across the dropped label dimension
+        return rule('total');
+    case "gauge":
+        // avg aggregates gauge values across the dropped label dimension
+        return rule('avg');
+    case "histogram":
+        // histogram_bucket preserves the le-keyed bucket structure
+        return rule('histogram_bucket');
+    case "summary":
+        // avg is a reasonable approximation when collapsing pre-computed quantiles
+        return rule('avg');
     }
-
-// # - match: 'http_requests_total' // metric name
-// #   interval: 1m // aggregation timing
-// #   outputs: [sum_samples] // 
-// #   without: [request_id] // problem label being dropped
-
-
-  throw new Error('Not implemented');
 }
 
 
