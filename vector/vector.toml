@@ -16,8 +16,8 @@ inputs = ["prom_in"]
 [sinks.s3_out]
 type = "aws_s3"
 inputs = ["to_victoriametrics_format"]
-bucket = "placeholder name"
-region = "placeholder region"
+bucket = "metropolis-capstone-431451851276-us-east-1-an"
+region = "us-east-1"
 key_prefix = "unbounded_metrics/"
 encoding.codec = "json"
 framing.method = "newline_delimited"

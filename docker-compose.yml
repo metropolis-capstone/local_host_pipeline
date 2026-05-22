@@ -84,13 +84,13 @@ services:
     depends_on:
       - vmselect
 
-  # vector:
-  #   build: ./vector
-  #   container_name: vector
-  #   networks: [vm-net]
-  #   ports:
-  #     - "9090:9090"
-  #   environment:
-  #     - AWS_ACCESS_KEY_ID=placeholder
-  #     - AWS_SECRET_ACCESS_KEY=placeholder
-  #     - AWS_REGION=placeholder
+  vector:
+    build: ./vector
+    container_name: vector
+    networks: [vm-net]
+    ports:
+      - "9090:9090"
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
