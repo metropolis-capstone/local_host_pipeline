@@ -2,11 +2,11 @@ import { describe, test, expect } from 'vitest';
 import { detectMetricType, buildRule } from '../src/yamlBuilder.js';
 import type { Recommendation } from '../src/recommendationGenerator.js';
 
-function makeRec(metricName: string, remainingLabels: string[] = [], problemLabels: string[] = []): Recommendation {
+function makeRec(metricName: string, remainingLabels: string[] = [], problemLabel: string = ""): Recommendation {
   return {
     metricName,
     status: 'pending',
-    problemLabels,
+    problemLabel,
     remainingLabels,
     estimatedCurrentSeries: 1000,
     estimatedAfterSeries: 500,
@@ -26,7 +26,7 @@ describe('detectMetricType', () => {
 
   // histograms — le label
   test('detects histogram via le label in remainingLabels', async () => expect(await detectMetricType(makeRec('http_request_duration_bucket', ['le', 'method']))).toBe('histogram'));
-  test('detects histogram via le label in problemLabels', async () => expect(await detectMetricType(makeRec('http_request_duration_bucket', [], ['le']))).toBe('histogram'));
+  test('detects histogram via le label in problemLabels', async () => expect(await detectMetricType(makeRec('http_request_duration_bucket', [], 'le'))).toBe('histogram'));
 
   // histograms — name suffix
   test('detects histogram via _bucket suffix', async () => expect(await detectMetricType(makeRec('http_request_duration_bucket'))).toBe('histogram'));
@@ -37,7 +37,7 @@ describe('detectMetricType', () => {
 
   // summaries — quantile label
   test('detects summary via quantile label in remainingLabels', async () => expect(await detectMetricType(makeRec('go_gc_duration_seconds', ['quantile']))).toBe('summary'));
-  test('detects summary via quantile label in problemLabels', async () => expect(await detectMetricType(makeRec('go_gc_duration_seconds', [], ['quantile']))).toBe('summary'));
+  test('detects summary via quantile label in problemLabels', async () => expect(await detectMetricType(makeRec('go_gc_duration_seconds', [], 'quantile'))).toBe('summary'));
   test('detects summary via quantile label (2)', async () => expect(await detectMetricType(makeRec('rpc_duration_seconds', ['quantile', 'method']))).toBe('summary'));
 
   // gauges — _info suffix
@@ -68,42 +68,37 @@ describe('detectMetricType', () => {
 describe('buildRule', () => {
 
   test('counter rule has outputs: [total]', async () => {
-    const rule = await buildRule(makeRec('http_requests_total', [], ['pod']), 'counter');
+    const rule = await buildRule(makeRec('http_requests_total', [], 'pod'), 'counter');
     expect(rule.outputs).toEqual(['total']);
   });
 
   test('gauge rule has outputs: [avg]', async () => {
-    const rule = await buildRule(makeRec('node_memory_bytes', [], ['instance']), 'gauge');
+    const rule = await buildRule(makeRec('node_memory_bytes', [], 'instance'), 'gauge');
     expect(rule.outputs).toEqual(['avg']);
   });
 
   test('histogram rule has outputs: [histogram_bucket]', async () => {
-    const rule = await buildRule(makeRec('http_request_duration_bucket', ['le'], ['pod']), 'histogram');
+    const rule = await buildRule(makeRec('http_request_duration_bucket', ['le'], 'pod'), 'histogram');
     expect(rule.outputs).toEqual(['histogram_bucket']);
   });
 
   test('summary rule has outputs: [avg]', async () => {
-    const rule = await buildRule(makeRec('go_gc_duration_seconds', ['quantile'], ['pod']), 'summary');
+    const rule = await buildRule(makeRec('go_gc_duration_seconds', ['quantile'], 'pod'), 'summary');
     expect(rule.outputs).toEqual(['avg']);
   });
 
   test('match is set to the metric name', async () => {
-    const rule = await buildRule(makeRec('http_requests_total', [], ['pod']), 'counter');
+    const rule = await buildRule(makeRec('http_requests_total', [], 'pod'), 'counter');
     expect(rule.match).toBe('http_requests_total');
   });
 
   test('without contains the problem label', async () => {
-    const rule = await buildRule(makeRec('node_memory_bytes', [], ['instance']), 'gauge');
+    const rule = await buildRule(makeRec('node_memory_bytes', [], 'instance'), 'gauge');
     expect(rule.without).toEqual(['instance']);
   });
 
-  test('without contains all problem labels when multiple', async () => {
-    const rule = await buildRule(makeRec('node_memory_bytes', [], ['instance', 'pod']), 'gauge');
-    expect(rule.without).toEqual(['instance', 'pod']);
-  });
-
   test('interval is 1m', async () => {
-    const rule = await buildRule(makeRec('http_requests_total', [], ['pod']), 'counter');
+    const rule = await buildRule(makeRec('http_requests_total', [], 'pod'), 'counter');
     expect(rule.interval).toBe('1m');
   });
 });
