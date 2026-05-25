@@ -26,7 +26,7 @@ export interface NormalizedMetricsData {
 export interface Recommendation {
   metricName: string;
   status: "pending";
-  problemLabels: string[];
+  problemLabel: string;
   remainingLabels: string[];
   estimatedCurrentSeries: number;
   estimatedAfterSeries: number;
@@ -120,7 +120,7 @@ export function generateRecommendations(
       recommendations.push({
         metricName,
         status: "pending",
-        problemLabels: [problemLabel.name],
+        problemLabel: problemLabel.name,
         remainingLabels,
         estimatedCurrentSeries,
         estimatedAfterSeries,

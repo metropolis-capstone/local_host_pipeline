@@ -14,8 +14,8 @@ interface VMMetadataResponse {
 }
 
 export async function detectMetricType(recommendation: Recommendation): Promise<MetricType> {
-  const { metricName, remainingLabels, problemLabels } = recommendation;
-  const allLabels = [...remainingLabels, ...problemLabels];
+  const { metricName, remainingLabels, problemLabel } = recommendation;
+  const allLabels = [...remainingLabels, problemLabel];
 
   // label-based checks are most reliable
   if (allLabels.includes('le')) return 'histogram';
@@ -56,7 +56,7 @@ export async function buildRule(recommendation: Recommendation, type: MetricType
         match: recommendation.metricName,
         interval: '1m',
         outputs: [outputs],
-        without: recommendation.problemLabels,
+        without: [recommendation.problemLabel],
     });
 
     switch (type) {

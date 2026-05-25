@@ -12,7 +12,7 @@ export const runOrchestrator = async () => {
     const {
       metricName,
       status,
-      problemLabels,
+      problemLabel,
       remainingLabels,
       estimatedCurrentSeries,
       estimatedAfterSeries,
@@ -30,7 +30,7 @@ export const runOrchestrator = async () => {
         explanation
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [metricName, status, problemLabels, remainingLabels, estimatedCurrentSeries, estimatedAfterSeries, estimatedReductionPercent, explanation]);
+      [metricName, status, problemLabel, remainingLabels, estimatedCurrentSeries, estimatedAfterSeries, estimatedReductionPercent, explanation]);
   });
 }
 
