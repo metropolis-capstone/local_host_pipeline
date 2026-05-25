@@ -20,14 +20,28 @@ export interface acceptedRecommendations {
   }
 }
 
+// {
+//   metricA: {
+//     problemLabels: [1,2]
+//     allLabels: [1,2,3,4,]
+//   },
+//   metricB: {
+//     problemLabels: ["a", "b"],
+//     allLabels: ["a", "b", "c", "d"]
+//   }
+// }
+
 //needs to be renamed
 //this is called in the api endpoint (POST), when the grafana front end, submits a batch of recommendations.
 //the shape at point of invocation is acceptedRecommendations (which is the shape we built in front endd)
 export async function yamlBuilderCoordinator(acceptedRecommendations: acceptedRecommendations) {
   // we need the metric name; we have to get this from the key, so we use object.entries cos it gives us the KEYs and values.
   const entries = Object.entries(acceptedRecommendations);
+  //now looks like this:
+  //[["metricA", {problemLabels: ..., allLabels: ...}], ["metricB", {problemLabels: ..., allLabels: ...}]]
   entries.forEach(async (subArr) => {
     //determine type for aggregation function
+    //...subArr = metricName, {problemLabels: ..., allLabels: ...}
     const type = await detectMetricType(...subArr);
     //for testing
     console.log(buildRule(...subArr, type));
@@ -35,9 +49,8 @@ export async function yamlBuilderCoordinator(acceptedRecommendations: acceptedRe
 }
 
 
-export async function detectMetricType(metricName: string, recommendation: acceptedRecommendations[string]): Promise<MetricType> {
-
-  const { allLabels } = recommendation
+export async function detectMetricType(metricName: string, allAndProblemLabelsObj: acceptedRecommendations[string]): Promise<MetricType> {
+  const { allLabels } = allAndProblemLabelsObj;
 
   // label-based checks are most reliable
   if (allLabels.includes('le')) return 'histogram';
@@ -74,13 +87,12 @@ export interface AggregationRule {
     without: string[]
 }
 
-export function buildRule(metricName: string, recommendation: acceptedRecommendations[string], type: MetricType): AggregationRule {
-
+export function buildRule(metricName: string, allAndProblemLabelsObj: acceptedRecommendations[string], type: MetricType): AggregationRule {
     const rule = (outputs: string): AggregationRule => ({
         match: metricName,
         interval: '1m',
         outputs: [outputs],
-        without: recommendation.problemLabels
+        without: allAndProblemLabelsObj.problemLabels
     });
 
     switch (type) {
