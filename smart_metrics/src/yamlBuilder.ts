@@ -13,9 +13,27 @@ interface VMMetadataResponse {
   };
 }
 
-export async function detectMetricType(recommendation: Recommendation): Promise<MetricType> {
-  const { metricName, remainingLabels, problemLabel } = recommendation;
-  const allLabels = [...remainingLabels, problemLabel];
+export interface acceptedRecommendations {
+  [key: string]: {
+    problemLabels: string[];
+    allLabels: string[];
+  }
+}
+
+//needs to be renamed
+export async function yamlBuilderCoordinator(acceptedRecommendations: acceptedRecommendations) {
+  const entries = Object.entries(acceptedRecommendations);
+  entries.forEach(async (subArr) => {
+    const type = await detectMetricType(...subArr);
+    console.log(buildRule(...subArr, type));
+    
+  })
+}
+
+
+export async function detectMetricType(metricName: string, recommendation: acceptedRecommendations[string]): Promise<MetricType> {
+
+  const { allLabels } = recommendation
 
   // label-based checks are most reliable
   if (allLabels.includes('le')) return 'histogram';
@@ -44,19 +62,21 @@ export async function detectMetricType(recommendation: Recommendation): Promise<
   return 'gauge';
 }
 
+//needs to change in the future.
 export interface AggregationRule {
     match: string;
     interval: string;
     outputs: string[];
-    without: string[];
+    without: string[]
 }
 
-export async function buildRule(recommendation: Recommendation, type: MetricType): Promise<AggregationRule> {
+export function buildRule(metricName: string, recommendation: acceptedRecommendations[string], type: MetricType): AggregationRule {
+
     const rule = (outputs: string): AggregationRule => ({
-        match: recommendation.metricName,
+        match: metricName,
         interval: '1m',
         outputs: [outputs],
-        without: [recommendation.problemLabel],
+        without: recommendation.problemLabels
     });
 
     switch (type) {

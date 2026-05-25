@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import { pool } from "./database.js";
 import { runOrchestrator } from "./orchestrator.js";
+import type { acceptedRecommendations } from "./yamlBuilder.js";
+import { yamlBuilderCoordinator } from "./yamlBuilder.js";
+
 const app = express();
 app.use(express.json());
 
@@ -18,16 +21,9 @@ app.get("/api/recommendations", async (_req, res) => {
   res.json(result.rows);
 });
 
-interface acceptedRecommendations {
-  [key: string]: {
-    problemLabels: string[];
-    allLabels: string[];
-  }
-}
-
 app.post("/api/acceptedRecommendations", (req, res) => {
-  const acceptedRecs = req.body;
-  console.log(acceptedRecs);
+  const acceptedRecs: acceptedRecommendations = req.body;
+  yamlBuilderCoordinator(acceptedRecs);
 })
 
 app.listen(PORT, () => {
