@@ -1,8 +1,11 @@
 import express from "express";
+import cors from "cors";
 import { pool } from "./database.js";
 import { runOrchestrator } from "./orchestrator.js";
 const app = express();
 const PORT = process.env.PORT ?? 3001;
+
+app.use(cors({ origin: "http://localhost:4000" }));
 
 app.get("/api/recommendations", async (_req, res) => {
   //we have the cron job run on each load for testing purposes
