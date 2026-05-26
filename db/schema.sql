@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS recommendations (
   id BIGSERIAL PRIMARY KEY,
   metric_name TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
-  problem_labels TEXT[] NOT NULL,
+  problem_label TEXT NOT NULL,
   remaining_labels TEXT[] NOT NULL,
   estimated_current_series BIGINT NOT NULL,
   estimated_after_series BIGINT NOT NULL,

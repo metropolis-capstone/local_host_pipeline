@@ -1,0 +1,27 @@
+1. Clone both repos into the same parent folder so they sit side by side:
+
+  capstone/
+    local_host_pipeline/
+    grafana_custom_plugin/
+
+2. In grafana_custom_plugin, install dependencies and build the plugin:
+
+  npm install
+  npm run build
+
+3. In local_host_pipeline, start the full pipeline:
+
+  docker compose up
+
+4. In local_host_pipeline/smart_metrics, install dependencies and start the API:
+
+  npm install
+  npm start
+
+5. In sample_app (sibling directory to the others in my strucutre, could be anywhere), start the metrics generator:
+
+  npm install
+  npm run dev
+
+6. Open http://localhost:3000 in your browser. Log in with admin / admin. The Trickl plugin should be accessible from the left nav. It might take a minute
+or two for recs to start hitting. Be warned, the bike is operational, so the YAML file will be updated everything you hit submit!
