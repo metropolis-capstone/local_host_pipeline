@@ -1,4 +1,1 @@
-- match: 'http_request_duration_ms_sum'
-  interval: 1m
-  outputs: [histogram_bucket]
-  without: [method]
+[]
