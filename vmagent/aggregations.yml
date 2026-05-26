@@ -1,4 +1,4 @@
-- match: 'http.requests.total'
+- match: 'http_request_duration_ms_sum'
   interval: 1m
-  outputs: [total]
-  without: [request_id]
+  outputs: [histogram_bucket]
+  without: [method]
