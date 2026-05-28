@@ -70,7 +70,7 @@ export async function writeRule(rule: AggregationRule) {
   outputs: [${rule.outputs}]
   without: [${rule.without}]\n`
 
-  
+
   const existing = await readFile(YAML_PATH, 'utf-8');
   //this will only ever run if aggregations.yml is empty / if it's the first ever aggregation rule.
   if (existing.replace(/\s/g, '') === '[]') {
