@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { pool } from "./database.js";
+import { pool, setupDatabase } from "./database.js";
 import { runOrchestrator } from "./orchestrator.js";
 import type { acceptedRecommendations } from "./yamlBuilder.js";
 import { yamlBuilderCoordinator } from "./yamlBuilder.js";
@@ -11,7 +11,8 @@ app.use(express.json());
 
 const PORT = process.env.PORT ?? 3001;
 
-app.use(cors({ origin: "http://localhost:3000" }));
+// allow all origins — this is an internal tool, not a public API
+app.use(cors());
 
 app.get("/api/recommendations", async (_req, res) => {
   //we have the cron job run on each load for testing purposes
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
   res.json( { status: "I'M HEALTHY"})
 })
 
+await setupDatabase();
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
