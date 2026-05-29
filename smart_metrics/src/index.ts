@@ -25,7 +25,7 @@ app.get("/api/recommendations", async (_req, res) => {
 
 app.get("/api/aggregations", async (req, res) => {
   const aggregations = await pool.query(
-    `SELECT metric_name, labels, json_snippet FROM aggregations`
+    `SELECT id, metric_name, labels, json_snippet FROM aggregations`
   );
 
   res.json(aggregations.rows);
