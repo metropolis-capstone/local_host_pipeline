@@ -63,6 +63,7 @@ export async function writeNewRulestoYaml(acceptedRecommendations: acceptedRecom
 export async function writeYaml() {
   const queryRes = await pool.query(`SELECT * FROM aggregations;`);
   const rows = queryRes.rows
+  // writeFile wipes the yaml file and replaces with an empty array. 
   await writeFile(YAML_PATH, '[]');
   if (rows.length) {
     await writeRule(rows[0].json_snippet, true);
