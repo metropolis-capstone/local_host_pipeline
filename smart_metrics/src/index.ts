@@ -24,6 +24,15 @@ app.get("/api/recommendations", async (_req, res) => {
   res.json(result.rows);
 });
 
+app.get("/api/aggregations", async (req, res) => {
+  const aggregations = await pool.query(
+    `SELECT metric_name, labels, json_snippet FROM aggregations`
+  );
+
+  res.json(aggregations.rows);
+})
+
+
 app.post("/api/acceptedRecommendations", async(req, res) => {
   const acceptedRecs: acceptedRecommendations = req.body;
   await yamlBuilderCoordinator(acceptedRecs);
