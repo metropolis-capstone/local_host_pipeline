@@ -33,7 +33,7 @@ app.get("/api/aggregations", async (req, res) => {
 
 app.delete("/api/aggregations", async (req, res) => {
   const aggregationsToRemove = req.body;
-  await Promise.all(aggregationsToRemove.map(aggregationId => {
+  await Promise.all(aggregationsToRemove.map((aggregationId: number) => {
     return pool.query(`DELETE FROM aggregations WHERE ID = $1`, [aggregationId]);
   }));
   await writeYaml();
