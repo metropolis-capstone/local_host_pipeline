@@ -52,39 +52,35 @@ export async function yamlBuilderCoordinator(acceptedRecommendations: acceptedRe
   const entries = Object.entries(acceptedRecommendations);
   //now looks like this:
   //[["metricA", {problemLabels: ..., allLabels: ...}], ["metricB", {problemLabels: ..., allLabels: ...}]]
-  await Promise.all(entries.map(async (subArr) => {
+  //we don't use promise.all because we don't want write conflicts when invoking writeRule
+  for (const subArr of entries) {
+    //determine type for aggregation function
+    //...subArr = metricName, {problemLabels: ..., allLabels: ...}
     const type = await detectMetricType(...subArr);
+    //for testing
     const rule = buildRule(...subArr, type);
-    return writeToDb(rule);
-  }))
-  await writeYaml();
-  // tell vmagent to hot-reload its config so the new rule takes effect immediately
-  await axios.get(`${process.env.VMAGENT_URL || 'http://localhost:8429'}/-/reload`);
-}
-
-export async function writeYaml() {
-  const queryRes = await pool.query(`SELECT * FROM aggregations;`);
-  const rows = queryRes.rows
-  await writeFile(YAML_PATH, '[]');
-  if (rows.length) {
-    await writeRule(rows[0].json_snippet, true);
-    await Promise.all(rows.slice(1).map((row) => {
-      return writeRule(row.json_snippet);
-    }));
+    await writeRule(rule);
+    await writeToDb(rule)
   }
 }
 
-export async function writeRule(rule: AggregationRule, overwrite: boolean = false) {
+export async function writeRule(rule: AggregationRule) {
   // combined evaluations for interval and outputs
   const aggregateLine = rule.outputs ? `\n  interval: ${rule.interval}\n  outputs: [${rule.outputs}]` : '';
   const writtenRule = `- match: '${rule.match}'${aggregateLine}
   without: [${rule.without}]\n`
 
-  if (overwrite) {
+  // read existing file to check if this is the first rule ever written
+  const existing = await readFile(YAML_PATH, 'utf-8');
+  // overwrite if file is empty/placeholder, otherwise append
+  if (existing.replace(/\s/g, '') === '[]') {
     await writeFile(YAML_PATH, writtenRule);
   } else {
     await appendFile(YAML_PATH, writtenRule);
   }
+
+  // tell vmagent to hot-reload its config so the new rule takes effect immediately
+  await axios.get(`${process.env.VMAGENT_URL || 'http://localhost:8429'}/-/reload`);
 }
 
 export async function detectMetricType(metricName: string, allAndProblemLabelsObj: acceptedRecommendations[string]): Promise<MetricType> {
@@ -151,8 +147,7 @@ export async function writeToDb(rule: AggregationRule) {
     await pool.query(`INSERT INTO aggregations(metric_name, labels, json_snippet) VALUES($1, $2, $3)`, [metric, labels, json])
 
   } catch (err: any) {
-    // let it bubble up to yamlBuilderCoordinator, which will then let it bubble to the index.ts route.
-    throw(err);
+    console.log(err, "An error inside function writeToDb")
   }
 
 }

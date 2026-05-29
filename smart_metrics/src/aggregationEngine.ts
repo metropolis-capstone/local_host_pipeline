@@ -271,3 +271,8 @@ export async function normalizeMetricsData(date: Date, ): Promise<NormalizedMetr
 // import { inspect } from 'node:util';
 
 // normalizeMetricsData(new Date()).then(res => console.log(inspect(res, { depth: null})));
+
+async function getAggregations() {
+  const aggregations = await pool.query(`SELECT metric_name FROM aggregations`)
+  return aggregations.rows.map(rowObj => rowObj.metric_name)
+}
