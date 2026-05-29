@@ -1,5 +1,4 @@
 import axios from 'axios';
-import type { Recommendation } from './recommendationGenerator.js';
 import { pool } from "./database.js";
 
 //../../vmagent/aggregations.yaml
@@ -60,18 +59,15 @@ export async function yamlBuilderCoordinator(acceptedRecommendations: acceptedRe
     const type = await detectMetricType(...subArr);
     //for testing
     const rule = buildRule(...subArr, type);
-    console.log(rule);
     await writeRule(rule);
     await writeToDb(rule)
   }
 }
 
 export async function writeRule(rule: AggregationRule) {
-  // if aggregate was true, build the outputs line; otherwise empty string so it's omitted from the YAML
-  const outputsLine = rule.outputs ? `\n  outputs: [${rule.outputs}]` : '';
-  // interpolate rule fields into a YAML block; outputsLine slots in between interval and without only when present
-  const writtenRule = `- match: '${rule.match}'
-  interval: ${rule.interval}${outputsLine}
+  // combined evaluations for interval and outputs
+  const aggregateLine = rule.outputs ? `\n  interval: ${rule.interval}\n  outputs: [${rule.outputs}]` : '';
+  const writtenRule = `- match: '${rule.match}'${aggregateLine}
   without: [${rule.without}]\n`
 
   // read existing file to check if this is the first rule ever written
@@ -120,7 +116,7 @@ export async function detectMetricType(metricName: string, allAndProblemLabelsOb
 //needs to change in the future.
 export interface AggregationRule {
     match: string;
-    interval: string;
+    interval?: string;
     outputs?: string[];
     without: string[]
 }
@@ -128,7 +124,6 @@ export interface AggregationRule {
 export function buildRule(metricName: string, allAndProblemLabelsObj: acceptedRecommendations[string], type: MetricType): AggregationRule {
     const base: AggregationRule = {
         match: metricName,
-        interval: allAndProblemLabelsObj.interval,
         without: allAndProblemLabelsObj.problemLabels
     }; 
   
@@ -142,7 +137,7 @@ export function buildRule(metricName: string, allAndProblemLabelsObj: acceptedRe
         summary: 'avg',
     };
     // add in the outputs field if line 138 did not execute. 
-    return { ...base, outputs: [outputMap[type]] };
+    return { ...base, interval: allAndProblemLabelsObj.interval, outputs: [outputMap[type]] };
 }
 export async function writeToDb(rule: AggregationRule) {
   try {
