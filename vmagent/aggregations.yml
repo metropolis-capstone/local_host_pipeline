@@ -1,10 +1,1 @@
-- match: 'http_requests_total'
-  interval: 5m
-  outputs: [total]
-  without: [request_id]
-- match: 'db_queries_total'
-  interval: 1m
-  outputs: [total]
-  without: [trace_id]
-- match: 'errors_total'
-  without: [session_id]
+[]
