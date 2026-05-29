@@ -1,4 +1,4 @@
-aggregations.yml
+vmagent/aggregations.yml
 
 # Staged plugin build artifacts (populated by grafana_custom_plugin's build step)
 grafana/plugin-dist/
