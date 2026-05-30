@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import { pool, setupDatabase } from "./database.js";
 import { runOrchestrator } from "./orchestrator.js";
+import { getAiContext } from "./aiContext.js";
+import { investigateCardinality } from "./aiInvestigator.js";
 import type { acceptedRecommendations } from "./yamlBuilder.js";
 import { writeNewRulestoYaml, writeYaml } from "./yamlBuilder.js";
 // import { getAggregations } from "./aggregationEngine.js";
@@ -21,6 +23,32 @@ app.get("/api/recommendations", async (_req, res) => {
     `SELECT * FROM recommendations WHERE status = 'pending' ORDER BY created_at DESC`
   );
   res.json(result.rows);
+});
+
+app.get("/api/ai/context", async (req, res) => {
+  const date = String(req.query.date ?? new Date().toISOString().slice(0, 10));
+  res.json(await getAiContext(date));
+});
+
+app.post("/api/ai/investigate", async (req, res) => {
+  try {
+    const question = req.body?.question;
+    if (typeof question !== "string" || question.trim() === "") {
+      res.status(400).json({ error: "question is required" });
+      return;
+    }
+
+    const date =
+      typeof req.body?.date === "string"
+        ? req.body.date
+        : new Date().toISOString().slice(0, 10);
+
+    res.json(await investigateCardinality({ question, date }));
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "AI investigation failed",
+    });
+  }
 });
 
 app.get("/api/aggregations", async (req, res) => {
