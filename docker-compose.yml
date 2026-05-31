@@ -136,6 +136,8 @@ services:
       - VMSELECT_ENDPOINT=http://vmselect:8481/select/0/prometheus/api/v1
       - YAML_PATH=/app/aggregations/aggregations.yml
       - VMAGENT_URL=http://vmagent:8429
+      - OPENAI_API_KEY
+      - OPENAI_MODEL=gpt-4.1-mini
     volumes:
       - ./vmagent/aggregations.yml:/app/aggregations/aggregations.yml
     depends_on:
