@@ -194,7 +194,8 @@ async function getLabelDropRules(): Promise<Map<string, Set<string>>> {
   const result = await pool.query(`SELECT metric_name, labels FROM rules WHERE aggregated = false`);
   const map = new Map<string, Set<string>>();
   for (const row of result.rows) {
-    map.set(row.metric_name, new Set(row.labels));
+    if (!map.has(row.metric_name)) map.set(row.metric_name, new Set());
+    row.labels.forEach(label => map.get(row.metric_name)!.add(label));
   }
   return map;
 }
